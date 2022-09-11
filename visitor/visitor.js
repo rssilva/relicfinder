@@ -1,14 +1,16 @@
-const parser = require("@babel/parser")
-const traverse = require("@babel/traverse").default
+const parser = require('@babel/parser')
+const traverse = require('@babel/traverse').default
 const { exportAll } = require('./exportAll')
 const { exportNamed } = require('./exportNamed')
+const { exportDefault } = require('./exportDefault')
+const { importDeclaration } = require('./importDeclaration')
 
 const parseCode = (code) => {
   try {
     const output = parser.parse(code, {
-      sourceType: "module",
+      sourceType: 'module',
 
-      plugins: ["jsx", "typescript"]
+      plugins: ['jsx', 'typescript'],
     })
 
     return output
@@ -17,21 +19,45 @@ const parseCode = (code) => {
   }
 }
 
-const traverseAst = (ast) => {
-  let data = {}
+const traverseAst = ({
+  ast,
+  filePath,
+  basePath,
+  repoPath,
+  dependencies = [],
+  devDependencies = [],
+}) => {
+  let data = {
+    imports: [],
+    exports: [],
+  }
+
+  if (!filePath) {
+    throw new Error('filepath?')
+  }
 
   traverse(ast, {
     ExportDefaultDeclaration(nodePath) {
-      // res.push({ ...path.node.loc, node: path.node })
-      // console.log(nodePath)
-      // data['export'] = nodePath
+      data.exports.push(exportDefault(nodePath))
     },
     ExportAllDeclaration(nodePath) {
-      data = exportAll(nodePath)
+      data.exports.push(exportAll(nodePath))
     },
     ExportNamedDeclaration(nodePath) {
-      data = exportNamed(nodePath)
-    }
+      data.exports.push(exportNamed(nodePath))
+    },
+    ImportDeclaration(nodePath) {
+      data.imports.push(
+        importDeclaration({
+          nodePath,
+          filePath,
+          basePath,
+          repoPath,
+          dependencies,
+          devDependencies,
+        })
+      )
+    },
   })
 
   return data
@@ -39,5 +65,5 @@ const traverseAst = (ast) => {
 
 module.exports = {
   traverseAst,
-  parseCode
+  parseCode,
 }

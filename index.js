@@ -1,19 +1,32 @@
 const parser = require('@babel/parser')
 const visitor = require('./visitor/visitor')
+const fs = require('fs')
+const { getFilesList } = require('./utils/getFilesList')
+const packageJson = require('./repo/Backend/client/package.json')
 
-const sample = `
-  const a1 = 1
-  const b1 = 2
+const dependencies = Object.keys(packageJson.dependencies)
+const devDependencies = Object.keys(packageJson.devDependencies || {})
 
-  export const sum = (a, b) => a + b
-  export default (a, b) => a + b
-`
+const extensions = ['js', 'jsx', 'ts', 'tsx']
 
-const ast = parser.parse(sample, {
-  sourceType: "module",
+;(async () => {
+  const filesList = await getFilesList(extensions)
 
-  plugins: ["jsx", "typescript"]
-})
+  const modulesData = {}
 
-const data = visitor.traverseAst(ast)
-console.log(data)
+  filesList.forEach((filePath) => {
+    const content = fs.readFileSync(filePath, { encoding: 'utf-8' })
+    const ast = visitor.parseCode(content)
+
+    modulesData[filePath] = visitor.traverseAst({
+      ast,
+      filePath,
+      basePath: 'src',
+      repoPath: 'repo/Backend/client',
+      dependencies,
+      devDependencies,
+    })
+  })
+
+  fs.writeFileSync('modulesData.json', JSON.stringify(modulesData))
+})()
