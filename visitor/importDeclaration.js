@@ -15,13 +15,14 @@ const importDeclaration = ({
 
   return {
     type: nodePath.type,
-    specifiers: node?.specifiers?.map((specifier) => {
-      return {
-        name: specifier.imported?.name,
-        localName: specifier.local?.name,
-        type: specifier.type,
-      }
-    }),
+    specifiers:
+      node?.specifiers?.map((specifier) => {
+        return {
+          name: specifier.imported?.name,
+          localName: specifier.local?.name,
+          type: specifier.type,
+        }
+      }) || [],
     source,
     _sourcePath: isExternalModule
       ? source

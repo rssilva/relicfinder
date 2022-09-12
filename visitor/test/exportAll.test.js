@@ -1,5 +1,5 @@
 const { parseCode, traverseAst } = require('../visitor')
-const { exportAll } = require('../exportAll')
+// const { exportAll } = require('../exportAll')
 
 describe('', () => {
   it('', () => {

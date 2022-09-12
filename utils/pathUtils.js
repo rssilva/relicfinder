@@ -30,7 +30,20 @@ const getImportPath = (filePath, sourceValue, basePath = '', repoPath = '') => {
   return path.join(folderPath, sourceValue)
 }
 
+const getPossibleModulePaths = (sourcePath, extensions = []) => {
+  return [
+    sourcePath,
+    ...extensions
+      .map((extension) => [
+        `${sourcePath}.${extension}`,
+        `${sourcePath}/index.${extension}`,
+      ])
+      .flat(),
+  ]
+}
+
 module.exports = {
   isExternal,
   getImportPath,
+  getPossibleModulePaths,
 }
