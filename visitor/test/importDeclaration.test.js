@@ -9,31 +9,35 @@ describe('', () => {
     `
 
     const ast = parseCode(sample)
+    const res = traverseAst({ ast, filePath: 'src/api.js' })
 
-    importDeclaration({
-      nodePath: {
-        node: {
-          type: 'ImportDeclaration',
-          importKind: 'value',
-          specifiers: [
-            {
-              type: 'ImportDefaultSpecifier',
-              local: {
-                type: 'Identifier',
-                name: 'get',
-              },
-            },
-          ],
-          source: {
-            type: 'StringLiteral',
-            extra: {
-              rawValue: 'api',
-              raw: "'api'",
-            },
-            value: 'api',
+    expect(res.imports).toEqual([
+      {
+        type: 'ImportDeclaration',
+        specifiers: [
+          {
+            name: undefined,
+            localName: 'get',
+            type: 'ImportDefaultSpecifier',
           },
-        },
+        ],
+        source: 'api',
+        _sourcePath: 'api',
+        isExternal: false,
       },
-    })
+      {
+        type: 'ImportDeclaration',
+        specifiers: [
+          {
+            name: undefined,
+            localName: 'Model',
+            type: 'ImportDefaultSpecifier',
+          },
+        ],
+        source: './models',
+        _sourcePath: 'src/models',
+        isExternal: false,
+      },
+    ])
   })
 })

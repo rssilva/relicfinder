@@ -10,6 +10,12 @@ describe('', () => {
     expect(
       traverseAst({ ast: parseCode(sample), filePath: 'src/models/index.js' })
         .exports
-    ).toEqual([{ type: 'ExportAllDeclaration', value: './requests' }])
+    ).toEqual([
+      {
+        _sourcePath: 'src/models/requests',
+        type: 'ExportAllDeclaration',
+        value: './requests',
+      },
+    ])
   })
 })

@@ -1,17 +1,26 @@
 const { parseCode, traverseAst } = require('../visitor')
-const { exportNamed } = require('../exportNamed')
 
 describe('', () => {
   it('', () => {
     const code = `
       const a = 1
       const b = 2
-      export {a, b}
+      export {a as A, b}
     `
     const ast = parseCode(code)
     const res = traverseAst({ ast, filePath: 'my_path' })
-    console.log(res.exports[0])
-    expect(1).toBe(1)
+
+    expect(res.exports).toEqual([
+      {
+        type: 'ExportNamedDeclaration',
+        specifiers: [
+          { localName: 'a', exportedName: 'A' },
+          { localName: 'b', exportedName: 'b' },
+        ],
+        declaration: undefined,
+        declarations: [],
+      },
+    ])
   })
 
   it('', () => {
@@ -20,7 +29,15 @@ describe('', () => {
     `
     const ast = parseCode(code)
     const res = traverseAst({ ast, filePath: 'my_path' })
-    console.log(res.exports[0])
+
+    expect(res.exports).toEqual([
+      {
+        type: 'ExportNamedDeclaration',
+        specifiers: [],
+        declaration: undefined,
+        declarations: [{ id: 'myVariable' }],
+      },
+    ])
     expect(1).toBe(1)
   })
 })
