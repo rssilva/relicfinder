@@ -1,76 +1,69 @@
 const _ = require('lodash')
 const { getPossibleModulePaths } = require('./pathUtils')
 
+const isExportAll = (e) => e.type == 'ExportAllDeclaration'
+const dataTemplate = { usedItems: [], usedBy: [] }
+
 const parseDataByModule = ({ modulesData, extensions }) => {
   let allImports = []
   const importedItemsByFile = {}
 
-  Object.entries(modulesData)
-    // .slice(50, 60)
-    .forEach(([filePath, currentModule]) => {
-      // let importedItems = []
-      const imported = currentModule.imports.filter((i) => !i.isExternal)
-      const exportAll = currentModule.exports
-        .filter((e) => e.type == 'ExportAllDeclaration')
-        .map((e) =>
-          getPossibleModulePaths(e._sourcePath, extensions).find(
-            (e) => modulesData[e]
-          )
-        )
+  Object.entries(modulesData).forEach(([filePath, currentModule]) => {
+    const getModulePath = (module) =>
+      getPossibleModulePaths(module._sourcePath, extensions).find(
+        (path) => modulesData[path]
+      )
 
-      if (exportAll.length) {
-        allImports = allImports.concat(exportAll.flat())
+    const importedByCurrent = currentModule.imports.filter((i) => !i.isExternal)
+    const exportAll = currentModule.exports
+      .filter(isExportAll)
+      .map(getModulePath)
+      .flat()
+
+    if (exportAll.length) {
+      allImports = allImports.concat(exportAll)
+    }
+
+    importedByCurrent.forEach((importData) => {
+      const moduleFileName = getModulePath(importData)
+
+      if (!importedItemsByFile[moduleFileName]) {
+        importedItemsByFile[moduleFileName] = { ...dataTemplate }
       }
 
-      imported.forEach((importsData) => {
-        const moduleFileName = getPossibleModulePaths(
-          importsData._sourcePath,
-          extensions
-        ).find((p) => modulesData[p])
-        const importedModuleData = modulesData[moduleFileName]
+      const moduleImportedData = importedItemsByFile[moduleFileName]
 
-        if (!importedItemsByFile[moduleFileName]) {
-          importedItemsByFile[moduleFileName] = {
-            usedItems: [],
-            usedBy: [],
-          }
-        }
+      moduleImportedData.usedBy = moduleImportedData.usedBy.concat(filePath)
 
-        importedItemsByFile[moduleFileName].usedBy =
-          importedItemsByFile[moduleFileName].usedBy.concat(filePath)
+      const hasSamePath = (item) => item._sourcePath === importData._sourcePath
 
-        const specifiers =
-          currentModule?.imports
-            .filter((item) => item._sourcePath === importsData._sourcePath)
-            .map((item) => item.specifiers)
-            .flat() || []
+      const specifiers =
+        currentModule?.imports.find(hasSamePath).specifiers || []
 
-        // console.log(currentModule.imports)
-
-        if (specifiers.length) {
-          // importedItems = importedItems.concat(specifiers)
-
-          importedItemsByFile[moduleFileName].usedItems = _.uniq(
-            importedItemsByFile[moduleFileName].usedItems.concat(
-              specifiers.filter(
-                (specifier) =>
-                  !importedItemsByFile[moduleFileName].usedItems.some((item) =>
-                    _.isEqual(item, specifier)
-                  )
-              )
-            )
+      if (specifiers.length) {
+        const isSpecifierMissing = (specifier) =>
+          !moduleImportedData.usedItems.some((item) =>
+            _.isEqual(item, specifier)
           )
-        }
 
-        if (moduleFileName) {
-          allImports.push(moduleFileName)
-        }
+        // get items that are used by any other module uniquely
+        // TODO: maybe does not repeat to count how many times is used?
+        moduleImportedData.usedItems = _.uniq(
+          moduleImportedData.usedItems.concat(
+            specifiers.filter(isSpecifierMissing)
+          )
+        )
+      }
 
-        // if (!moduleData) {
-        //   console.log(filePath, modulePath, possibilities.slice(0, 2))
-        // }
-      })
+      if (moduleFileName) {
+        allImports.push(moduleFileName)
+      }
+
+      if (!modulesData[moduleFileName]) {
+        // console.log('does not have module data associated with', filePath, importData._sourcePath)
+      }
     })
+  })
 
   return { allImports, importedItemsByFile }
 }
