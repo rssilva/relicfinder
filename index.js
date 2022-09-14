@@ -3,13 +3,17 @@ const fs = require('fs')
 const { getFilesList } = require('./utils/getFilesList')
 const _ = require('lodash')
 const packageJson = require('./repo/Backend/client/package.json')
-const mock = require('./modulesData.json')
+// const mock = require('./modulesData.json')
 const { parseDataByModule } = require('./utils/parseDataByModule')
+const { getUnusedMethods } = require('./utils/getUnusedMethods')
 
 const dependencies = Object.keys(packageJson.dependencies)
 const devDependencies = Object.keys(packageJson.devDependencies || {})
 
 const extensions = ['js', 'jsx', 'ts', 'tsx']
+
+const shouldLogUnimportedFiles = false
+const shouldLogUnusedMethods = true
 
 ;(async () => {
   const filesList = (await getFilesList(extensions)).filter(
@@ -43,42 +47,22 @@ const extensions = ['js', 'jsx', 'ts', 'tsx']
     extensions,
   })
 
-  Object.entries(modulesData).forEach(([filePath, moduleData]) => {
-    const exports = moduleData.exports
-      .map((e) => [[...(e.specifiers || [])].concat(e.declarations || [])])
-      .flat()
-      .filter((item) => item.length)
-      .flat()
-    // .flat()
+  const unusedMethods = getUnusedMethods({ modulesData, importedItemsByFile })
 
-    // console.log(exports)
+  if (shouldLogUnusedMethods) {
+    Object.entries(unusedMethods).forEach(([file, data]) =>
+      console.log(file, data)
+    )
+  }
 
-    if (exports.length > importedItemsByFile[filePath]?.usedItems.length) {
-      console.log(
-        filePath,
-        _.difference(
-          exports.map((e) => e.id || e.localName),
-          importedItemsByFile[filePath]?.usedItems.map(
-            (e) => e.name || e.localName
-          )
-        )
-        // importedItemsByFile[filePath].usedItems
-      )
-    }
-  })
+  if (shouldLogUnimportedFiles) {
+    const unimportedFiles = _.difference(filesList, _.uniq(allImports.flat()))
+    console.log(unimportedFiles)
+  }
 
-  // const unimported = _.difference(filesList, _.uniq(allImports.flat()))
-  // console.log(importedItemsByFile)
-
-  // const unique = _.uniq(importsList.flat())
-  // const diff = filesList.filter((file) => !unique.includes(file))
-  // console.log(diff)
-
-  // fs.writeFileSync('export-all.json', JSON.stringify(exportAllList.flat()))
-  // fs.writeFileSync('unique.json', JSON.stringify(unique))
-  fs.writeFileSync(
-    'importedItemsByFile.json',
-    JSON.stringify(importedItemsByFile)
-  )
+  // fs.writeFileSync(
+  //   'importedItemsByFile.json',
+  //   JSON.stringify(importedItemsByFile)
+  // )
   // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData))
 })()
