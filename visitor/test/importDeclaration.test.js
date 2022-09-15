@@ -1,9 +1,9 @@
 const { parseCode, traverseAst } = require('../visitor')
 
-describe('', () => {
-  it('', () => {
+describe('ImportDeclaration', () => {
+  it('ImportSpecifier and ImportDefaultSpecifier', () => {
     const sample = `
-      import get from 'api'
+      import { get } from 'api'
       import Model from './models'
     `
 
@@ -15,9 +15,9 @@ describe('', () => {
         type: 'ImportDeclaration',
         specifiers: [
           {
-            name: undefined,
+            name: 'get',
             localName: 'get',
-            type: 'ImportDefaultSpecifier',
+            type: 'ImportSpecifier',
           },
         ],
         source: 'api',
@@ -35,6 +35,30 @@ describe('', () => {
         ],
         source: './models',
         _sourcePath: 'src/models',
+        isExternal: false,
+      },
+    ])
+  })
+
+  it('ImportNamespaceSpecifier', () => {
+    const sample = `
+      import * as api from 'api'
+    `
+
+    const res = traverseAst({ ast: parseCode(sample), filePath: 'src/api.js' })
+
+    expect(res.imports).toEqual([
+      {
+        type: 'ImportDeclaration',
+        specifiers: [
+          {
+            name: undefined,
+            localName: 'api',
+            type: 'ImportNamespaceSpecifier',
+          },
+        ],
+        source: 'api',
+        _sourcePath: 'api',
         isExternal: false,
       },
     ])
