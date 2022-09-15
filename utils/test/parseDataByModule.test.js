@@ -67,11 +67,29 @@ describe('', () => {
       'components/Header/index.js',
     ])
 
-    expect(result.importedItemsByFile['api/index.js']).toEqual({
-      usedItems: [
-        { localName: 'getUsers', name: 'getUsers', type: 'ImportSpecifier' },
-      ],
-      usedBy: ['index.js'],
+    expect(result.importedItemsByFile).toEqual({
+      'api/index.js': {
+        usedItems: [
+          { localName: 'getUsers', name: 'getUsers', type: 'ImportSpecifier' },
+        ],
+        usedBy: ['index.js'],
+      },
+      'components/index.js': {
+        usedItems: [
+          { name: 'Button', localName: 'Button', type: 'ImportSpecifier' },
+        ],
+        usedBy: ['index.js'],
+      },
+      'defaultExport.js': {
+        usedItems: [
+          {
+            name: undefined,
+            localName: 'mysteriousFunction',
+            type: 'ImportDefaultSpecifier',
+          },
+        ],
+        usedBy: ['index.js'],
+      },
     })
   })
 })
