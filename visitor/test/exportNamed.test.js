@@ -38,6 +38,5 @@ describe('', () => {
         declarations: [{ id: 'myVariable' }],
       },
     ])
-    expect(1).toBe(1)
   })
 })

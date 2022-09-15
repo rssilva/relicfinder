@@ -1,4 +1,3 @@
-const { importDeclaration } = require('../importDeclaration')
 const { parseCode, traverseAst } = require('../visitor')
 
 describe('', () => {

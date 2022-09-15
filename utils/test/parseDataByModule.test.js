@@ -6,6 +6,7 @@ describe('', () => {
     const index = `
       import {getUsers} from 'api'
       import {Button} from 'components'
+      import mysteriousFunction from './defaultExport'
     `
 
     const apiIndex = `
@@ -25,6 +26,10 @@ describe('', () => {
       export const Header = 2
     `
 
+    const defaultExport = `
+      export default () => {}
+    `
+
     const modulesData = {
       'index.js': traverseAst({ ast: parseCode(index), filePath: 'index.js' }),
       'api/index.js': traverseAst({
@@ -35,20 +40,32 @@ describe('', () => {
         ast: parseCode(componentsIndex),
         filePath: 'components/index.js',
       }),
-      'components/button/index.js': traverseAst({
+      'components/Button/index.js': traverseAst({
         ast: parseCode(buttonIndex),
-        filePath: 'components/button/index.js',
+        filePath: 'components/Button/index.js',
       }),
-      'components/header/index.js': traverseAst({
+      'components/Header/index.js': traverseAst({
         ast: parseCode(headerIndex),
-        filePath: 'components/button/index.js',
+        filePath: 'components/Header/index.js',
+      }),
+      'defaultExport.js': traverseAst({
+        ast: parseCode(defaultExport),
+        filePath: 'defaultExport.js',
       }),
     }
 
     // console.log(modulesData['index.js'].imports[0])
 
     const result = parseDataByModule({ modulesData, extensions: ['js'] })
-    console.log(result.allImports, result.importedItemsByFile)
+    console.log(result.importedItemsByFile)
+
+    expect(result.allImports).toEqual([
+      'api/index.js',
+      'components/index.js',
+      'defaultExport.js',
+      'components/Button/index.js',
+      'components/Header/index.js',
+    ])
 
     expect(result.importedItemsByFile['api/index.js']).toEqual({
       usedItems: [
