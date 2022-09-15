@@ -3,6 +3,7 @@ const exportDefault = (nodePath) => {
     type: nodePath.type,
     name: nodePath?.declaration?.name,
     specifiers: [],
+    declarationType: nodePath?.node?.declaration?.type,
   }
 }
 
