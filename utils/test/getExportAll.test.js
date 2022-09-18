@@ -1,7 +1,6 @@
 const { handleExportAll } = require('../getExportAll')
 const { parseDataByModule } = require('../parseDataByModule')
 let { modulesData } = require('./basicFileSystem.mock')
-const fs = require('fs')
 
 describe('', () => {
   it('', () => {
@@ -15,10 +14,6 @@ describe('', () => {
       importedItemsByFile,
       extensions: ['js'],
     })
-
-    // console.log(result.modulesData['components/Button/index.js'])
-
-    fs.writeFileSync('exportAll.json', JSON.stringify(result))
 
     expect(result.importedItemsByFile).toEqual({
       'api/index.js': {

@@ -1,15 +1,14 @@
-const _ = require('lodash')
 const { getExportAll } = require('./modulesUtils')
 
 const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
   const exportAllList = []
 
-  Object.keys(modulesData).forEach((filePath) => {
+  Object.keys(modulesData).forEach((importerFilePath) => {
     // console.log(file, modulesData[file])
-    const fileSource = filePath.replace(/\/index.[^.]{1,}$/, '')
-    const currentModule = modulesData[filePath]
+    const importerSource = importerFilePath.replace(/\/index.[^.]{1,}$/, '')
+    const importerModule = modulesData[importerFilePath]
     const exportAll = getExportAll(
-      currentModule.exports,
+      importerModule.exports,
       modulesData,
       extensions
     )
@@ -17,7 +16,7 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
     exportAll.forEach((exportPath) => {
       const sourcePath = exportPath.replace(/\/index.[^.]{1,}$/, '')
 
-      const moduleExports = modulesData[filePath].exports
+      const importerExportsFiltered = modulesData[importerFilePath].exports
         .filter((e) => e._sourcePath === sourcePath)
         .map((e) => {
           return {
@@ -38,23 +37,24 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
         }
       }
 
-      if (!importedItemsByFile[filePath]) {
-        importedItemsByFile[filePath] = {
+      if (!importedItemsByFile[importerFilePath]) {
+        importedItemsByFile[importerFilePath] = {
           usedItems: [],
           usedBy: [],
         }
       }
 
-      importedItemsByFile[exportPath].usedBy.push(filePath)
+      importedItemsByFile[exportPath].usedBy.push(importerFilePath)
 
-      if (moduleExports.length) {
-        importedItemsByFile[exportPath].usedItems =
-          importedItemsByFile[exportPath].usedItems.concat(moduleExports)
+      if (importerExportsFiltered.length) {
+        importedItemsByFile[exportPath].usedItems = importedItemsByFile[
+          exportPath
+        ].usedItems.concat(importerExportsFiltered)
       }
 
-      importedItemsByFile[filePath].usedBy.forEach((usedByPath) => {
+      importedItemsByFile[importerFilePath].usedBy.forEach((usedByPath) => {
         const importsData = modulesData[usedByPath].imports.filter(
-          (i) => i.source === fileSource
+          (i) => i._sourcePath === importerSource
         )
 
         const importerSpecifiers = importsData
@@ -73,8 +73,6 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
           )
         })
 
-        console.log(currentSpeciersIds, isImportedBy)
-
         if (importedItemsByFile[exportPath]?.usedBy) {
           importedItemsByFile[exportPath].usedBy.push(usedByPath)
         }
@@ -86,15 +84,14 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
       })
 
       exportAllList.push({
-        usedBy: filePath,
+        usedBy: importerFilePath,
         exportPath,
         sourcePath,
-        moduleExports,
+        importerExportsFiltered,
       })
     })
   })
 
-  // console.log(JSON.stringify(importedItemsByFile))
   return { exportAllList, modulesData, importedItemsByFile }
 }
 

@@ -1,12 +1,5 @@
 const _ = require('lodash')
-const { getPossibleModulePaths } = require('./pathUtils')
-
-const isExportAll = (e) => e.type == 'ExportAllDeclaration'
-
-const getModulePath = (modulesData, extensions) => (module) =>
-  getPossibleModulePaths(module._sourcePath, extensions).find(
-    (path) => modulesData[path]
-  )
+const { getExportAll, getModulePath } = require('./modulesUtils')
 
 const hasSamePath = (sourcePath) => (item) => item._sourcePath === sourcePath
 
@@ -22,9 +15,6 @@ const getUniqSpecifiers = (specifiers, moduleImportedData) =>
       specifiers.filter(isSpecifierMissing(moduleImportedData))
     )
   )
-
-const getExportAll = (exports, modulesData, extensions) =>
-  exports.filter(isExportAll).map(getModulePath(modulesData, extensions)).flat()
 
 const isInternalModule = (moduleData) => !moduleData.isExternal
 
@@ -91,29 +81,6 @@ const parseDataByModule = ({ modulesData, extensions }) => {
         currentModule,
         moduleFileName,
       })
-    })
-
-    exportAll.forEach((exportFilePath) => {
-      // if (!importedItemsByFile[exportFilePath]) {
-      //   importedItemsByFile[exportFilePath] = { ...dataTemplate }
-      // }
-      // if (!importedItemsByFile[exportFilePath].usedBy.includes(filePath)) {
-      //   console.log(filePath, modulesData[filePath])
-      //   importedItemsByFile[exportFilePath].usedBy.push(filePath)
-      //   importedItemsByFile[exportFilePath].usedItems = importedItemsByFile[
-      //     exportFilePath
-      //   ].usedItems.concat(
-      //     getSpecifiers(
-      //       modulesData[filePath].imports,
-      //       modulesData[exportFilePath]._sourcePath
-      //     )
-      //   )
-      // }
-      // console.log(exportFilePath, filePath)
-      // const specifiers =
-      //   getSpecifiers(currentModule?.imports || [], exportFilePath) || []
-      // importedItemsByFile[exportFilePath].usedItems =
-      //   importedItemsByFile[exportFilePath].usedItems.concat(specifiers)
     })
   })
 
