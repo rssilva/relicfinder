@@ -2,27 +2,30 @@ const visitor = require('./visitor/visitor')
 const fs = require('fs')
 const { getFilesList } = require('./utils/getFilesList')
 const _ = require('lodash')
-const packageJson = require('./repo/Backend/client/package.json')
-// const mock = require('./modulesData.json')
 // const unusedMock = require('./unusedMethods.json')
 const { parseDataByModule } = require('./utils/parseDataByModule')
 const { getUnusedMethods } = require('./utils/getUnusedMethods')
-const { isEqual } = require('lodash')
+// const { isEqual } = require('lodash')
 const { handleExportAll } = require('./utils/getExportAll')
 const { argv } = require('process')
 
-const lineArguments = argv.slice(2)
+const commandArguments = argv.slice(2)
+
+const packageJson = JSON.parse(fs.readFileSync(process.env.PACKAGE_JSON_PATH))
+const repoPath = process.env.REPO_PATH
+const basePath = process.env.BASE_PATH
+const filesDir = process.env.FILES_DIR
 
 const dependencies = Object.keys(packageJson.dependencies)
 const devDependencies = Object.keys(packageJson.devDependencies || {})
 
 const extensions = ['js', 'jsx', 'ts', 'tsx']
 
-const shouldLogUnimportedFiles = lineArguments.includes('--logUnimported')
-const shouldLogUnusedMethods = lineArguments.includes('--logUnused')
+const shouldLogUnimportedFiles = commandArguments.includes('--logUnimported')
+const shouldLogUnusedMethods = commandArguments.includes('--logUnused')
 
 ;(async () => {
-  const filesList = (await getFilesList(extensions)).filter(
+  const filesList = (await getFilesList(extensions, filesDir)).filter(
     (file) => !/.*\.(stories|test|mock)\./.test(file)
   )
 
@@ -35,18 +38,12 @@ const shouldLogUnusedMethods = lineArguments.includes('--logUnused')
     modulesData[filePath] = visitor.traverseAst({
       ast,
       filePath,
-      basePath: 'src',
-      repoPath: 'repo/Backend/client',
+      basePath,
+      repoPath,
       dependencies,
       devDependencies,
     })
   })
-
-  // const filesList = Object.keys(mock).filter(
-  //   (file) => !/.*\.(stories|test|mock)\./.test(file)
-  // )
-
-  // const modulesData = mock
 
   const { allImports, importedItemsByFile } = parseDataByModule({
     modulesData,
@@ -57,14 +54,7 @@ const shouldLogUnusedMethods = lineArguments.includes('--logUnused')
 
   const unusedMethods = getUnusedMethods({ modulesData, importedItemsByFile })
 
-  // fs.writeFileSync('unusedMethods_modified.json', JSON.stringify(unusedMethods))
-  // fs.writeFileSync(
-  //   'importedItemsByFile_modified.json',
-  //   JSON.stringify(importedItemsByFile)
-  // )
-  // fs.writeFileSync('modulesData_modified.json', JSON.stringify(modulesData))
-
-  // console.log(_.difference(filesList, Object.keys(importedItemsByFile)))
+  // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData))
 
   if (shouldLogUnusedMethods) {
     Object.entries(unusedMethods).forEach(([file, data]) =>
@@ -80,10 +70,4 @@ const shouldLogUnusedMethods = lineArguments.includes('--logUnused')
     const unimportedFiles = _.difference(filesList, _.uniq(allImports.flat()))
     console.log(unimportedFiles)
   }
-
-  // fs.writeFileSync(
-  //   'importedItemsByFile.json',
-  //   JSON.stringify(importedItemsByFile)
-  // )
-  // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData))
 })()

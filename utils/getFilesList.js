@@ -1,8 +1,8 @@
 const glob = require('glob')
 
-const getFilesList = (extensions) => {
+const getFilesList = (extensions, filesDir = './') => {
   return new Promise((accept, reject) => {
-    const pattern = `repo/Backend/client/src/**/*.{${extensions.join(',')}}`
+    const pattern = `${filesDir}/**/*.{${extensions.join(',')}}`
 
     glob(pattern, (err, list) => {
       if (err) {
