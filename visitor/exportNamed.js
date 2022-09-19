@@ -1,7 +1,10 @@
-const exportNamed = (nodePath) => {
-  const node = nodePath.node
+const { getImportPath } = require('../utils/pathUtils')
 
-  return {
+const exportNamed = ({ nodePath, filePath, basePath, repoPath }) => {
+  const node = nodePath.node
+  const source = node.source?.module || node.source?.value
+
+  const data = {
     type: nodePath.type,
     specifiers:
       node.specifiers?.map((specifier) => {
@@ -17,7 +20,14 @@ const exportNamed = (nodePath) => {
           id: declaration?.id?.name,
         }
       }) || [],
+    source,
   }
+
+  if (source) {
+    data._sourcePath = getImportPath(filePath, source, basePath, repoPath)
+  }
+
+  return data
 }
 
 module.exports = {

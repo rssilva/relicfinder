@@ -44,7 +44,7 @@ const traverseAst = ({
       data.exports.push(exportAll({ nodePath, filePath, basePath, repoPath }))
     },
     ExportNamedDeclaration(nodePath) {
-      data.exports.push(exportNamed(nodePath))
+      data.exports.push(exportNamed({ nodePath, filePath, basePath, repoPath }))
     },
     ImportDeclaration(nodePath) {
       data.imports.push(

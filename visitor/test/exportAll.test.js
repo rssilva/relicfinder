@@ -1,8 +1,8 @@
 const { parseCode, traverseAst } = require('../visitor')
 // const { exportAll } = require('../exportAll')
 
-describe('', () => {
-  it('', () => {
+describe('exportAll', () => {
+  it('adds _sourcePath information', () => {
     const sample = `
       export * from './requests';
     `
