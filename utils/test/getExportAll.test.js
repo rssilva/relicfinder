@@ -2,8 +2,8 @@ const { handleExportAll } = require('../getExportAll')
 const { parseDataByModule } = require('../parseDataByModule')
 let { modulesData } = require('./basicFileSystem.mock')
 
-describe('', () => {
-  it('', () => {
+describe('getExportAll', () => {
+  it('connects ExportAllDeclaration with the files using the modules', () => {
     const { importedItemsByFile } = parseDataByModule({
       modulesData,
       extensions: ['js'],

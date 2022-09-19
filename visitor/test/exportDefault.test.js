@@ -1,7 +1,7 @@
 const { parseCode, traverseAst } = require('../../visitor/visitor')
 
-describe('', () => {
-  it('', () => {
+describe('exportDefault', () => {
+  it('handles simple default exports', () => {
     const sample = `
       export default (n1, n2) => n1 + n2
     `
