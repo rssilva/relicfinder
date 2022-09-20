@@ -26,6 +26,26 @@ describe('getExportAll', () => {
         ],
         usedBy: ['index.js'],
       },
+      'components/Input/Input.js': {
+        usedItems: [
+          {
+            localName: 'Input',
+            name: 'Input',
+            type: 'ImportSpecifier',
+          },
+        ],
+        usedBy: ['components/Input/index.js', 'pages/page1.js'],
+      },
+      'components/Input/index.js': {
+        usedItems: [
+          {
+            localName: 'Input',
+            name: 'Input',
+            type: 'ImportSpecifier',
+          },
+        ],
+        usedBy: ['pages/page1.js'],
+      },
       'components/index.js': {
         usedItems: [
           {
@@ -40,6 +60,7 @@ describe('getExportAll', () => {
         usedItems: [
           {
             localName: 'mysteriousFunction',
+            name: undefined,
             type: 'ImportDefaultSpecifier',
           },
         ],

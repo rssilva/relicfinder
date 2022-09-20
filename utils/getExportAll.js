@@ -1,10 +1,11 @@
-const { getExportAll } = require('./modulesUtils')
+// const { exportAll } = require('../visitor/exportAll')
+const { getExportAll, getNamedExport } = require('./modulesUtils')
 
 const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
   const exportAllList = []
 
   Object.keys(modulesData).forEach((importerFilePath) => {
-    // console.log(file, modulesData[file])
+    console.log(importerFilePath)
     const importerSource = importerFilePath.replace(/\/index.[^.]{1,}$/, '')
     const importerModule = modulesData[importerFilePath]
     const exportAll = getExportAll(
@@ -12,8 +13,15 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
       modulesData,
       extensions
     )
+    const namedExports = getNamedExport(
+      importerModule.exports,
+      modulesData,
+      extensions
+    )
 
-    exportAll.forEach((exportPath) => {
+    const list = [...exportAll, ...namedExports]
+
+    list.forEach((exportPath) => {
       const sourcePath = exportPath.replace(/\/index.[^.]{1,}$/, '')
 
       const importerExportsFiltered = modulesData[importerFilePath].exports
@@ -66,11 +74,14 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
           .flat()
 
         const isImportedBy = importerSpecifiers.filter((specifier) => {
-          return currentSpeciersIds.find(
-            (currentSpecifier) =>
+          return currentSpeciersIds.find((currentSpecifier) => {
+            return (
               currentSpecifier.id === specifier.name ||
-              currentSpecifier.id === specifier.localName
-          )
+              currentSpecifier.id === specifier.localName ||
+              currentSpecifier.exportedName === specifier.name ||
+              currentSpecifier.localName === specifier.exportedName
+            )
+          })
         })
 
         if (importedItemsByFile[exportPath]?.usedBy) {

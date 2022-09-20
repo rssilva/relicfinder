@@ -13,6 +13,7 @@ describe('', () => {
       'defaultExport.js',
       'components/Button/index.js',
       'components/Header/index.js',
+      'components/Input/index.js',
     ])
 
     expect(result.importedItemsByFile).toEqual({
@@ -21,6 +22,16 @@ describe('', () => {
           { localName: 'getUsers', name: 'getUsers', type: 'ImportSpecifier' },
         ],
         usedBy: ['index.js'],
+      },
+      'components/Input/index.js': {
+        usedItems: [
+          {
+            localName: 'Input',
+            name: 'Input',
+            type: 'ImportSpecifier',
+          },
+        ],
+        usedBy: ['pages/page1.js'],
       },
       'components/index.js': {
         usedItems: [
