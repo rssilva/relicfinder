@@ -5,7 +5,6 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
   const exportAllList = []
 
   Object.keys(modulesData).forEach((importerFilePath) => {
-    console.log(importerFilePath)
     const importerSource = importerFilePath.replace(/\/index.[^.]{1,}$/, '')
     const importerModule = modulesData[importerFilePath]
     const exportAll = getExportAll(
