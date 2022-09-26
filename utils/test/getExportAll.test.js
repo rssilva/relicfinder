@@ -88,6 +88,11 @@ describe('getExportAll', () => {
             value: './Header',
             _sourcePath: 'components/Header',
           },
+          {
+            localName: 'Button',
+            name: 'Button',
+            type: 'ImportSpecifier',
+          },
         ],
         usedBy: ['components/index.js', 'index.js'],
       },
