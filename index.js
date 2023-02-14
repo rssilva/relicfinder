@@ -23,6 +23,10 @@ const extensions = ['js', 'jsx', 'ts', 'tsx']
 
 const shouldLogUnimportedFiles = commandArguments.includes('--logUnimported')
 const shouldLogUnusedMethods = commandArguments.includes('--logUnused')
+const shouldLogUnusedPackages = commandArguments.includes('--logUnusedPackages')
+const shouldLogPackages = commandArguments.includes('--logPackages')
+
+const usedDependencies = new Map()
 
 ;(async () => {
   const filesList = (await getFilesList(extensions, filesDir)).filter(
@@ -69,5 +73,28 @@ const shouldLogUnusedMethods = commandArguments.includes('--logUnused')
   if (shouldLogUnimportedFiles) {
     const unimportedFiles = _.difference(filesList, _.uniq(allImports.flat()))
     console.log(unimportedFiles)
+  }
+
+  if (shouldLogPackages || shouldLogUnusedPackages) {
+    Object.keys(modulesData).forEach((file) => {
+      modulesData[file]?.imports
+        .filter((a) => a.isExternal)
+        ?.map((a) => a.source)
+        .forEach((source) => {
+          usedDependencies.set(
+            source,
+            Number(usedDependencies.get(source) || 0) + 1
+          )
+        })
+    })
+
+    if (shouldLogPackages) {
+      console.log(usedDependencies)
+    }
+
+    if (shouldLogUnusedPackages) {
+      const usedPackages = Array.from(usedDependencies).map((arr) => arr[0])
+      console.log(_.difference([...dependencies], usedPackages))
+    }
   }
 })()
