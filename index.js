@@ -5,7 +5,6 @@ const _ = require('lodash')
 // const unusedMock = require('./unusedMethods.json')
 const { parseDataByModule } = require('./utils/parseDataByModule')
 const { getUnusedMethods } = require('./utils/getUnusedMethods')
-// const { isEqual } = require('lodash')
 const { handleExportAll } = require('./utils/getExportAll')
 const { argv } = require('process')
 
@@ -54,11 +53,13 @@ const usedDependencies = new Map()
     extensions,
   })
 
-  handleExportAll({ modulesData, importedItemsByFile, extensions })
+  const { exportAllList } = handleExportAll({
+    modulesData,
+    importedItemsByFile,
+    extensions,
+  })
 
   const unusedMethods = getUnusedMethods({ modulesData, importedItemsByFile })
-
-  // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData))
 
   if (shouldLogUnusedMethods) {
     Object.entries(unusedMethods).forEach(([file, data]) =>
@@ -66,12 +67,14 @@ const usedDependencies = new Map()
     )
   }
 
-  // if (!isEqual(unusedMock, unusedMethods)) {
-  //   throw Error('WARNING')
-  // }
-
   if (shouldLogUnimportedFiles) {
-    const unimportedFiles = _.difference(filesList, _.uniq(allImports.flat()))
+    const unimportedFiles = _.difference(
+      [...filesList],
+      _.uniq([
+        ...allImports.flat(),
+        ...exportAllList.map((a) => a.exportPath).flat(),
+      ])
+    )
     console.log(unimportedFiles)
   }
 
