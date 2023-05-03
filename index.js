@@ -35,17 +35,21 @@ const usedDependencies = new Map()
   const modulesData = {}
 
   filesList.forEach((filePath) => {
-    const content = fs.readFileSync(filePath, { encoding: 'utf-8' })
-    const ast = visitor.parseCode(content)
+    try {
+      const content = fs.readFileSync(filePath, { encoding: 'utf-8' })
+      const ast = visitor.parseCode(content)
 
-    modulesData[filePath] = visitor.traverseAst({
-      ast,
-      filePath,
-      basePath,
-      repoPath,
-      dependencies,
-      devDependencies,
-    })
+      modulesData[filePath] = visitor.traverseAst({
+        ast,
+        filePath,
+        basePath,
+        repoPath,
+        dependencies,
+        devDependencies,
+      })
+    } catch (e) {
+      console.log('eeeee', e, filePath)
+    }
   })
 
   const { allImports, importedItemsByFile } = parseDataByModule({
