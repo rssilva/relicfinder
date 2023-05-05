@@ -10,7 +10,7 @@ const getUnusedMethods = ({ modulesData, importedItemsByFile }) => {
       .filter((item) => item.length)
       .flat()
 
-    if (exports.length > importedItemsByFile[filePath]?.usedItems.length) {
+    if (exports.length !== importedItemsByFile[filePath]?.usedItems.length) {
       differences[filePath] = _.difference(
         exports.map((e) => e.id || e.localName),
         importedItemsByFile[filePath]?.usedItems.map(

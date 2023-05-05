@@ -66,9 +66,11 @@ const usedDependencies = new Map()
   const unusedMethods = getUnusedMethods({ modulesData, importedItemsByFile })
 
   if (shouldLogUnusedMethods) {
-    Object.entries(unusedMethods).forEach(([file, data]) =>
-      console.log(file, data)
-    )
+    Object.entries(unusedMethods).forEach(([file, data]) => {
+      if (data.length) {
+        console.log(file, data)
+      }
+    })
   }
 
   if (shouldLogUnimportedFiles) {
