@@ -81,7 +81,8 @@ const usedDependencies = new Map()
         ...exportAllList.map((a) => a.exportPath).flat(),
       ])
     )
-    console.log(unimportedFiles)
+
+    unimportedFiles.forEach((file) => console.log(file))
   }
 
   if (shouldLogPackages || shouldLogUnusedPackages) {
