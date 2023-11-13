@@ -27,6 +27,24 @@ const shouldLogPackages = commandArguments.includes('--logPackages')
 
 const usedDependencies = new Map()
 
+const isIgnoredResult = (ignoredResults, file) => {
+  let isIgnored = false
+
+  if (ignoredResults.length) {
+    ignoredResults?.forEach((ignoredPattern) => {
+      try {
+        if (RegExp(ignoredPattern, '').test(file)) {
+          isIgnored = true
+        }
+      } catch (e) {
+        console.log('invalid regex', e)
+      }
+    })
+  }
+
+  return isIgnored
+}
+
 ;(async () => {
   const filesList = (await getFilesList(extensions, filesDir)).filter(
     (file) => !/.*\.(stories|test|mock)\./.test(file)
@@ -65,10 +83,24 @@ const usedDependencies = new Map()
 
   const unusedMethods = getUnusedMethods({ modulesData, importedItemsByFile })
 
+  const ignoredResultsCommand = commandArguments.find((command) =>
+    command.startsWith('--ignoredResults')
+  )
+
+  let ignoredResults = []
+
+  if (ignoredResultsCommand) {
+    ignoredResults = ignoredResultsCommand
+      .replace('--ignoredResults=', '')
+      .split(',')
+  }
+
   if (shouldLogUnusedMethods) {
     Object.entries(unusedMethods).forEach(([file, data]) => {
       if (data.length) {
-        console.log(file, data)
+        if (!isIgnoredResult(ignoredResults, file)) {
+          console.log(file, data)
+        }
       }
     })
   }
@@ -82,7 +114,11 @@ const usedDependencies = new Map()
       ])
     )
 
-    unimportedFiles.forEach((file) => console.log(file))
+    unimportedFiles.forEach((file) => {
+      if (!isIgnoredResult(ignoredResults, file)) {
+        console.log(file)
+      }
+    })
   }
 
   if (shouldLogPackages || shouldLogUnusedPackages) {
