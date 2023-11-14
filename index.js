@@ -99,7 +99,26 @@ const isIgnoredResult = (ignoredResults, file) => {
     Object.entries(unusedMethods).forEach(([file, data]) => {
       if (data.length) {
         if (!isIgnoredResult(ignoredResults, file)) {
-          console.log(file, data)
+          // console.log(file, data)
+
+          try {
+            const content = fs.readFileSync(file, { encoding: 'utf-8' })
+            const ast = visitor.parseCode(content)
+
+            const occurrences = visitor.checkUnused({
+              ast,
+              unused: data,
+              filePath: file,
+              basePath,
+              repoPath,
+              dependencies,
+              devDependencies,
+            })
+
+            console.log(file, occurrences)
+          } catch (e) {
+            console.log('eeeee', e, file)
+          }
         }
       }
     })

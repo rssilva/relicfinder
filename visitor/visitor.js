@@ -63,7 +63,33 @@ const traverseAst = ({
   return data
 }
 
+const checkUnused = ({ ast, unused, filePath }) => {
+  const occur = {}
+
+  if (!filePath) {
+    console.log('where are you filepath?', filePath)
+    throw new Error('filepath?')
+  }
+
+  traverse(ast, {
+    Identifier(path) {
+      if (path?.node?.name) {
+        if (unused.includes(path.node.name)) {
+          if (!occur[path.node.name]) {
+            occur[path.node.name] = 0
+          }
+
+          occur[path.node.name]++
+        }
+      }
+    },
+  })
+
+  return occur
+}
+
 module.exports = {
   traverseAst,
   parseCode,
+  checkUnused,
 }
