@@ -13,6 +13,7 @@ module.exports = {
     describe: true,
     expect: true,
     it: true,
+    process: true,
   },
   rules: {},
 }
