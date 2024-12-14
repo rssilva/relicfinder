@@ -7,6 +7,7 @@ const { parseDataByModule } = require('./utils/parseDataByModule')
 const { getUnusedMethods } = require('./utils/getUnusedMethods')
 const { handleExportAll } = require('./utils/getExportAll')
 const { argv } = require('process')
+const { getPossibleModulePaths } = require('./utils/pathUtils')
 
 const commandArguments = argv.slice(2)
 
@@ -162,4 +163,162 @@ const isIgnoredResult = (ignoredResults, file) => {
       console.log(_.difference([...dependencies], usedPackages))
     }
   }
+
+  console.log('\n\n\n')
+
+  const relationList = {}
+
+  Object.entries(modulesData).forEach(([filePath, data]) => {
+    if (!relationList[filePath]) {
+      relationList[filePath] = { usedBy: [] }
+    }
+
+    data.imports.forEach((importData) => {
+      let isPresent = false
+      let importPath = ''
+
+      getPossibleModulePaths(importData._sourcePath, extensions).forEach(
+        (entirePath) => {
+          isPresent = isPresent || !!modulesData[entirePath]
+
+          if (modulesData[entirePath]) {
+            importPath = entirePath
+          }
+        }
+      )
+
+      if (importPath) {
+        if (!relationList[importPath]) {
+          relationList[importPath] = { usedBy: [] }
+        }
+
+        importData?.specifiers?.forEach((specifier) => {
+          relationList[importPath].usedBy.push({
+            specifier: specifier.name,
+            type: specifier.type,
+            path: filePath,
+          })
+        })
+      }
+    })
+
+    data.exports.forEach((exportData) => {
+      if (exportData._sourcePath) {
+        let isPresent = false
+        let exportPath = ''
+
+        getPossibleModulePaths(exportData._sourcePath, extensions).forEach(
+          (entirePath) => {
+            isPresent = isPresent || !!modulesData[entirePath]
+
+            if (modulesData[entirePath]) {
+              exportPath = entirePath
+            }
+          }
+        )
+
+        if (exportPath) {
+          if (!relationList[exportPath]) {
+            relationList[exportPath] = { usedBy: [] }
+          }
+
+          exportData?.specifiers?.forEach((specifier) => {
+            relationList[exportPath].usedBy.push({
+              // specifier: specifier.name,
+              // type: specifier.type,
+              ...specifier,
+              path: filePath,
+            })
+          })
+        }
+      }
+    })
+  })
+
+  Object.entries(relationList).forEach(([filePath, data]) => {
+    const specifiers = data.usedBy.map((item) => item.specifier)
+    let exportsTokens = []
+
+    modulesData[filePath]?.exports.forEach((exportItem) => {
+      exportsTokens = exportsTokens.concat(
+        [
+          exportItem.specifiers?.map((specifier) => specifier.name) || [],
+          exportItem.declarations?.map((declaration) => declaration.id) || [],
+        ].flat()
+      )
+    })
+
+    const missingTokens = _.difference(_.compact(exportsTokens), specifiers)
+
+    if (missingTokens.length && !isIgnoredResult(ignoredResults, filePath)) {
+      const content = fs.readFileSync(filePath, { encoding: 'utf-8' })
+      const ast = visitor.parseCode(content)
+
+      const occurrences = visitor.checkUnused({
+        ast,
+        unused: missingTokens,
+        filePath,
+        basePath,
+        repoPath,
+        dependencies,
+        devDependencies,
+      })
+
+      Object.entries(occurrences).forEach(([token, times]) => {
+        if (times < 2) {
+          console.log(filePath, token, times)
+        }
+      })
+    }
+  })
+
+  const dfs = (pathName) => {
+    const stack = [pathName]
+    const visited = new Set()
+    const data = []
+
+    while (stack.length != 0) {
+      let current = stack.pop()
+
+      if (!visited.has(current)) {
+        visited.add(current)
+        data.push(current)
+
+        relationList[current].usedBy.forEach((item) => stack.push(item.path))
+      }
+    }
+
+    console.log(visited)
+  }
+
+  const findCyclical = () => {
+    const repeated = []
+
+    Object.entries(relationList).forEach(([filePath, data]) => {
+      const paths = data.usedBy.map((item) => item.path)
+
+      paths.forEach((path) => {
+        const paths2 = relationList[path].usedBy.map((item) => item.path)
+
+        const circular = paths2.find((item) => item === filePath)
+        const alreadyLogged = repeated.find((tuple) =>
+          _.isEqual([path, filePath].sort(), tuple)
+        )
+
+        if (circular && !alreadyLogged) {
+          console.log(path, filePath)
+          repeated.push([path, filePath].sort())
+        }
+      })
+    })
+
+    return repeated
+  }
+
+  // console.log(
+  //   dfs()
+  // )
+
+  // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData, null, 2))
+  // fs.writeFileSync('relationList.json', JSON.stringify(relationList, null, 2))
 })()
