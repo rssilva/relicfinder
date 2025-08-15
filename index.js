@@ -275,20 +275,28 @@ const isIgnoredResult = (ignoredResults, file) => {
   const dfs = (pathName) => {
     const stack = [pathName]
     const visited = new Set()
-    const data = []
+    const data = {}
 
     while (stack.length != 0) {
       let current = stack.pop()
 
       if (!visited.has(current)) {
         visited.add(current)
-        data.push(current)
 
-        relationList[current].usedBy.forEach((item) => stack.push(item.path))
+        if (!data[current]) {
+          data[current] = {}
+        }
+
+        data[current] = {
+          exports: modulesData[current]?.exports,
+          imports: modulesData[current]?.imports,
+        }
+
+        relationList[current]?.usedBy.forEach((item) => stack.push(item.path))
       }
     }
 
-    console.log(visited)
+    fs.writeFileSync('data.json', JSON.stringify(data, null, 2))
   }
 
   const findCyclical = () => {
@@ -319,6 +327,6 @@ const isIgnoredResult = (ignoredResults, file) => {
   //   dfs()
   // )
 
-  // fs.writeFileSync('modulesData.json', JSON.stringify(modulesData, null, 2))
-  // fs.writeFileSync('relationList.json', JSON.stringify(relationList, null, 2))
+  fs.writeFileSync('modulesData.json', JSON.stringify(modulesData, null, 2))
+  fs.writeFileSync('relationList.json', JSON.stringify(relationList, null, 2))
 })()

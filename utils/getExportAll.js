@@ -18,7 +18,7 @@ const handleExportAll = ({ modulesData, importedItemsByFile, extensions }) => {
       extensions
     )
 
-    const list = [...exportAll, ...namedExports]
+    const list = [...exportAll, ...namedExports].filter((item) => item)
 
     list.forEach((exportPath) => {
       const sourcePath = exportPath.replace(/\/index.[^.]{1,}$/, '')

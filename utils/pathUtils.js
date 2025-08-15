@@ -5,9 +5,9 @@ const isExternal = (modulePath, dependencies, devDependencies) => {
     return false
   }
 
-  if (modulePath.startsWith('@')) {
-    return true
-  }
+  // if (modulePath.startsWith('@')) {
+  //   return true
+  // }
 
   return [...dependencies, ...devDependencies].some((dependency) => {
     if (dependency === modulePath) {
@@ -22,7 +22,7 @@ const isExternal = (modulePath, dependencies, devDependencies) => {
 
 const getImportPath = (filePath, sourceValue, basePath = '', repoPath = '') => {
   if (!sourceValue.startsWith('.')) {
-    return path.join(repoPath, basePath, sourceValue)
+    return path.join(repoPath, basePath, sourceValue.replace(/^@/, ''))
   }
 
   const folderPath = filePath.replace(/[^/]{1,}$/, '')
