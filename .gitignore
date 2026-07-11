@@ -1,1 +1,7 @@
+.DS_store
+
 node_modules
+repo
+coverage
+
+test/fixtures/README.md
