@@ -3,6 +3,7 @@ import './App.css'
 import { Button, P1 } from './components'
 import * as timeUtils from './utils/time'
 import { AboutPage } from './pages'
+import MisteriousComponentDefaulty from './components/image/image'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -26,6 +27,9 @@ function App() {
         >
           Count is {count}
         </Button>
+        <MisteriousComponentDefaulty>
+          <img />
+        </MisteriousComponentDefaulty>
       </section>
 
       <div className="ticks">
