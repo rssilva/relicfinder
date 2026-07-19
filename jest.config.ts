@@ -3,7 +3,7 @@ const config = {
   testPathIgnorePatterns: ['/node_modules/', 'repo'],
   roots: ['.'],
   collectCoverageFrom: [
-    './**.ts',
+    './src/**/**.*',
     '!./repo/**',
     '!./coverage/**',
     '!./test/**',
