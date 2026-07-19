@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "index.ts",
   "scripts": {
-    "test": "jest ."
+    "start": "ts-node index.ts",
+    "test": "jest src"
   },
   "dependencies": {
     "@babel/parser": "^7.29.7",
