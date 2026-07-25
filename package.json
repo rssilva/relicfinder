@@ -8,7 +8,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "ts-node index.ts",
-    "test": "jest src"
+    "test": "jest src",
+    "lint": "eslint src"
   },
   "dependencies": {
     "@babel/parser": "^7.29.7",
@@ -22,11 +23,16 @@
   },
   "devDependencies": {
     "@babel/types": "^7.29.7",
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.24",
     "@types/node": "^26.0.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.7.0",
     "jest": "^30.4.2",
+    "jiti": "^2.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
   }
 }
