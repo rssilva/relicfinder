@@ -5,4 +5,4 @@ repo
 coverage
 
 test/fixtures/README.md
-reports/*.json
+reports/*
