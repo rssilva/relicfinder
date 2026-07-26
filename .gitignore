@@ -1,3 +1,7 @@
 node_modules
 repo
 coverage
+.DS_store
+
+test/fixtures/README.md
+reports/*
