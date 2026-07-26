@@ -1,9 +1,7 @@
 import { ParseResult } from '@babel/parser'
 import traverse, { Node, NodePath, Scope } from '@babel/traverse'
-// import { Declaration, identifier, VariableDeclarator } from '@babel/types'
-// import fs from 'fs'
 import _ from 'lodash'
-// import { printf } from '../utils/logger'
+import { VariableDeclaratorGuard } from '../utils/types/typeGuards'
 
 const getDefinitionParent = ({
   searchNode,
@@ -15,13 +13,13 @@ const getDefinitionParent = ({
   invokes: NodePath[]
 }) => {
   searchNode?.traverse({
-    VariableDeclaration(nodePath) {
-      const declarations = nodePath.node.declarations
-      // @ts-expect-error id.name
-      const found = declarations.find((dec) => dec.id.name === name)
+    VariableDeclarator(nodePath) {
+      const found = VariableDeclaratorGuard.hasName(nodePath.node)
+        ? name === nodePath.node.id.name
+        : false
 
       if (found) {
-        invokes.push(nodePath?.parentPath)
+        invokes.push(nodePath)
       }
     },
   })
@@ -79,7 +77,7 @@ export const traverseEnter = ({
     throw new Error(`missing ast to ${filePath}`)
   }
 
-  const exps = getExports({ ast })
+  const exports = getExports({ ast })
 
   traverse(ast, {
     enter(nodePath) {
@@ -96,39 +94,77 @@ export const traverseEnter = ({
       ) {
         const generic = id || name || callee
 
-        const foundExport = exps.find(([names]) => {
+        const foundExport = exports.find(([names]) => {
           return !!names?.filter((name) => name === String(generic)).length
         })
 
-        const shouldLook = !(
+        const shouldIgnore =
           nodePath.isExportNamedDeclaration() ||
           nodePath.isVariableDeclarator() ||
-          nodePath.isIdentifier()
-        )
+          nodePath.isVariableDeclaration()
 
-        if (foundExport && shouldLook) {
-          const res = getDefinitionParent({
+        if (foundExport && !shouldIgnore) {
+          const definitions = getDefinitionParent({
             searchNode: nodePath,
             name: String(generic),
             invokes: [],
           })
 
-          const defined = !!res.find((resNode) => {
-            const scope = resNode.scope
+          const hasVariableOnParent = definitions.find((definition) => {
+            if (nodePath.isIdentifier()) {
+              if (nodePath.parentPath.isVariableDeclarator()) {
+                return nodePath.node
+              }
 
-            if (resNode.isExportNamedDeclaration()) {
-              return false
+              if (
+                nodePath.node.loc?.start.line ===
+                foundExport?.[2].node.loc?.start.line
+              ) {
+                return nodePath.node
+              }
             }
 
-            if (foundExport[2].key === resNode.key) {
-              return false
+            if (nodePath.node === definition.node) {
+              return nodePath
             }
 
-            // printf(generic, scope.uid, found?.[2].scope.uid, nodePath.scope.uid)
-            return scope.uid !== foundExport?.[2].scope.uid
+            const hasVarDeclarator = nodePath.find((closePath) => {
+              const siblings = [
+                ...closePath.getAllNextSiblings(),
+                ...closePath.getAllPrevSiblings(),
+              ]
+
+              const hasSiblings = siblings.some((sibling) => {
+                let hasFoundName = false
+
+                if (sibling.isVariableDeclaration()) {
+                  sibling.node.declarations.forEach((declaration) => {
+                    const name = VariableDeclaratorGuard.hasName(declaration)
+                      ? declaration.id.name
+                      : ''
+
+                    if (name === generic) {
+                      hasFoundName = true
+                    }
+                  })
+                }
+
+                return hasFoundName
+              })
+
+              return hasSiblings
+            })
+
+            if (hasVarDeclarator) {
+              return nodePath
+            }
+
+            return nodePath.node === foundExport?.[2].node
+              ? nodePath.node
+              : false
           })
 
-          if (!defined) {
+          if (!hasVariableOnParent) {
             isMatch = true
           }
         }
@@ -139,13 +175,12 @@ export const traverseEnter = ({
           // nodePath.isExportSpecifier() ||
           // nodePath.isIdentifier() ||
           // nodePath.isExpressionStatement() ||
+          nodePath.isVariableDeclaration() ||
           nodePath.isVariableDeclarator() ||
           nodePath.isProgram()
         ) || nodePath.isJSXOpeningElement()
 
       if (shouldAdd) {
-        // printf('will add', isMatch)
-
         nodePaths.push({
           ...nodePath.node,
           // @ts-expect-error wrong type
@@ -154,25 +189,7 @@ export const traverseEnter = ({
         })
       }
     },
-    // ExportNamedDeclaration(nodePath) {
-    //   if (!nodePath.isClassDeclaration()) {
-    //     // @ts-ignore
-    //     console.log(nodePath.node.declaration?.declarations?.length)
-    //     exps.push([
-    //       // @ts-ignore
-    //       nodePath.node.declaration?.declarations
-    //         // @ts-ignore
-    //         ?.map((i) => i.id?.name)
-    //         .flat() || [],
-    //       nodePath.scope,
-    //       nodePath,
-    //       nodePath.node.loc,
-    //     ])
-    //   }
-    // },
   })
-
-  // fs.writeFileSync('./reports/scopes.json', JSON.stringify(nodePaths, null, 2))
 
   return nodePaths
 }
