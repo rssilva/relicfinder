@@ -1,7 +1,7 @@
 import { Button } from "../../../components"
 import { Badge } from "../../../components/badge"
 
-export const Header = () => <h1>halo!</h1>
+
 
 export const AboutPage = () => {
   return <div>
@@ -10,3 +10,5 @@ export const AboutPage = () => {
     <Button>hey!</Button>
   </div>
 }
+
+export const Header = () => <h1>halo!</h1>

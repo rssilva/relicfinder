@@ -5,11 +5,13 @@ import * as timeUtils from './utils/time'
 import { AboutPage } from './pages'
 import MisteriousComponentDefaulty from './components/image/image'
 import { helloShadow } from './utils/shadow'
+import { conditionalFunc } from './utils/conditionalUseLocally'
 
 function App() {
   const [count, setCount] = useState(0)
 
   helloShadow()
+  conditionalFunc()
 
   return (
     <>
